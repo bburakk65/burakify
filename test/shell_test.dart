@@ -20,6 +20,13 @@ Future<void> _addFilesFromHome(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+/// "Eklendi" / hata bildirimi (SnackBar) alt oynatıcının üstünü geçici olarak
+/// kapatır; dokunmadan önce süresinin dolmasını bekler.
+Future<void> _waitForSnackBar(WidgetTester tester) async {
+  await tester.pump(const Duration(seconds: 6));
+  await tester.pumpAndSettle();
+}
+
 ThemeMode _themeMode(WidgetTester tester) =>
     tester.widget<MaterialApp>(find.byType(MaterialApp)).themeMode!;
 
@@ -121,6 +128,7 @@ void main() {
         expect(app.player.playing, isTrue);
         expect(find.byKey(const Key('mini_player')), findsOneWidget);
 
+        await _waitForSnackBar(tester);
         await tester.tap(find.byKey(const Key('mini_player')));
         await tester.pumpAndSettle();
         expect(find.text('Çalıyor'), findsOneWidget);
@@ -138,6 +146,7 @@ void main() {
         await _addFilesFromHome(tester);
         await tester.tap(find.text('bozuk'));
         await tester.pumpAndSettle();
+        await _waitForSnackBar(tester);
         await tester.tap(find.byKey(const Key('mini_player')));
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('player_error')), findsOneWidget);

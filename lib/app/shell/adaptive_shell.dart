@@ -246,56 +246,66 @@ class _Sidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    return Container(
+    // ListTile, arka planını en yakın Material üzerine boyar; bu yüzden renk
+    // Container/ColoredBox yerine Material ile verilir.
+    return Material(
       key: const Key('desktop_sidebar'),
-      width: 232,
       color: theme.colorScheme.surfaceContainerLow,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
+      child: SizedBox(
+        width: 232,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              const BurakifyLogo(size: 32),
-              const SizedBox(width: 10),
+              Row(
+                children: <Widget>[
+                  const BurakifyLogo(size: 32),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Burakify',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              for (int i = 0; i < _destinations.length; i++)
+                ListTile(
+                  selected: i == selectedIndex,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  leading: Icon(
+                    i == selectedIndex
+                        ? _destinations[i].selectedIcon
+                        : _destinations[i].icon,
+                  ),
+                  title: Text(_destinations[i].label),
+                  onTap: () => onSelect(i),
+                ),
+              const Spacer(),
+              FilledButton.tonalIcon(
+                key: const Key('sidebar_add_button'),
+                onPressed: onAdd,
+                icon: const Icon(Icons.add),
+                label: const Text('Dosya ekle'),
+              ),
+              const SizedBox(height: 8),
               Text(
-                'Burakify',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
+                'Ctrl+O',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          for (int i = 0; i < _destinations.length; i++)
-            ListTile(
-              selected: i == selectedIndex,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              leading: Icon(
-                i == selectedIndex
-                    ? _destinations[i].selectedIcon
-                    : _destinations[i].icon,
-              ),
-              title: Text(_destinations[i].label),
-              onTap: () => onSelect(i),
-            ),
-          const Spacer(),
-          FilledButton.tonalIcon(
-            key: const Key('sidebar_add_button'),
-            onPressed: onAdd,
-            icon: const Icon(Icons.add),
-            label: const Text('Dosya ekle'),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Ctrl+O',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
