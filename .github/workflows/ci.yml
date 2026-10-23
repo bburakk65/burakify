@@ -22,11 +22,10 @@ jobs:
         run: bash tool/prepare_platforms.sh
       - run: flutter --version
       - run: flutter pub get
-      # Biçim denetimi geçici olarak bilgilendirme amaçlı: kod henüz hiç `dart format`
-      # ile biçimlendirilmedi. İlk biçimlendirmeden sonra `continue-on-error` kaldırılacak.
-      - name: Biçim denetimi
-        run: dart format --output=none --set-exit-if-changed lib test
-        continue-on-error: true
+      # Biçim yalnızca bilgi amaçlı listelenir (hata sayılmaz): kod henüz `dart format` ile
+      # biçimlendirilmedi. Biçimlendirilince `--set-exit-if-changed` eklenip zorunlu yapılacak.
+      - name: Biçim bilgisi (hata saymaz)
+        run: dart format --output=none lib test
       # Hata ve uyarılar işi başarısız yapar; yalnızca 'info' düzeyindeki öneriler yapmaz.
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
@@ -103,7 +102,13 @@ jobs:
         shell: bash
         run: bash tool/prepare_platforms.sh
       - run: flutter pub get
-      - run: flutter build windows --release
+      # just_audio_windows eklentisi eski <experimental/coroutine> başlığını kullanıyor; yeni
+      # Visual Studio bunu hata sayıyor (STL1011). Derleyiciye bu uyarıyı kapatan tanımı
+      # `CL` ortam değişkeniyle veriyoruz.
+      - name: Windows derlemesi
+        run: flutter build windows --release
+        env:
+          CL: /D_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS
       - uses: actions/upload-artifact@v4
         with:
           name: burakify-windows
