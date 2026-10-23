@@ -1,0 +1,25 @@
+name: Unpack
+# burakify.zip dosyasını depoya yüklediğinde içindekileri açıp depoya koyar.
+on:
+  push:
+    paths: ["burakify.zip"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Zip'i ac
+        run: |
+          test -f burakify.zip || { echo "burakify.zip yok"; exit 1; }
+          unzip -oq burakify.zip
+          rm burakify.zip
+      - name: Depoya kaydet
+        run: |
+          git config user.name "unpack-bot"
+          git config user.email "unpack-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "Burakify dosyalari eklendi"
+          git push
