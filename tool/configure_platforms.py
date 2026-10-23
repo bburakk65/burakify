@@ -4,6 +4,8 @@
 - minSdk 29 (Android 10 ve üzeri)
 - applicationId com.burakify.app
 - Uygulama adı "Burakify"
+- Eklentilerin compileSdk değeri en az 36 olur (flutter_plugin_android_lifecycle
+  gibi bağımlılıklar bunu istiyor; eski eklentiler 34 ile derleniyor ve APK derlemesi kırılıyor)
 - Release imzalama: android/key.properties varsa release derlemesi onunla imzalanır,
   yoksa Flutter şablonundaki gibi debug anahtarına düşer (yerel deneme için).
 
@@ -14,6 +16,14 @@ NOT: Bu betik bu ortamda gerçek bir `flutter create` çıktısıyla denenemedi.
 import pathlib
 import re
 import sys
+
+# Windows'ta varsayılan konsol kodlaması (cp1252) Türkçe karakterleri yazamaz
+# ve betiği çökertir; çıktıyı her zaman UTF-8 yap.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 APP_ID = "com.burakify.app"
@@ -103,6 +113,56 @@ def patch_signing(gradle: pathlib.Path) -> bool:
     return True
 
 
+COMPILE_SDK = 36
+
+KTS_COMPILE = """// Burakify: eklentileri en az compileSdk 36 ile derle (tool/configure_platforms.py ekledi).
+// evaluationDependsOn'dan ÖNCE durmalı, yoksa afterEvaluate hata verir.
+subprojects {
+    afterEvaluate {
+        if (project.name != "app") {
+            val androidExt = project.extensions.findByName("android")
+            if (androidExt != null) {
+                androidExt.javaClass.methods
+                    .firstOrNull { it.name == "setCompileSdkVersion" && it.parameterTypes.size == 1 && it.parameterTypes[0] == Int::class.javaPrimitiveType }
+                    ?.invoke(androidExt, 36)
+            }
+        }
+    }
+}
+
+"""
+GROOVY_COMPILE = """// Burakify: eklentileri en az compileSdk 36 ile derle (tool/configure_platforms.py ekledi).
+subprojects {
+    afterEvaluate { p ->
+        if (p.name != "app" && p.hasProperty("android")) {
+            p.android.compileSdkVersion 36
+        }
+    }
+}
+
+"""
+
+
+def patch_compile_sdk(android: pathlib.Path) -> bool:
+    root_gradle = next(
+        (p for p in (android / "build.gradle.kts", android / "build.gradle") if p.exists()),
+        None,
+    )
+    if root_gradle is None:
+        print("HATA: android/build.gradle(.kts) bulunamadı")
+        return False
+    text = root_gradle.read_text(encoding="utf-8")
+    if "Burakify: eklentileri en az compileSdk" in text:
+        print(f"tamam: compileSdk {COMPILE_SDK} zaten ekli -> {root_gradle.relative_to(ROOT)}")
+        return True
+    block = KTS_COMPILE if root_gradle.suffix == ".kts" else GROOVY_COMPILE
+    m = re.search(r"^allprojects\s*\{", text, re.M)
+    pos = m.start() if m else 0
+    root_gradle.write_text(text[:pos] + block + text[pos:], encoding="utf-8")
+    print(f"tamam: eklentiler için compileSdk {COMPILE_SDK} -> {root_gradle.relative_to(ROOT)}")
+    return True
+
+
 def main() -> int:
     android = ROOT / "android"
     if not android.is_dir():
@@ -124,6 +184,7 @@ def main() -> int:
     ok &= patch(gradle, r'(applicationId\s*=?\s*)"[^"]*"', rf'\g<1>"{APP_ID}"', f"applicationId {APP_ID}")
     ok &= patch(manifest, r'(android:label=")[^"]*(")', rf"\g<1>{APP_LABEL}\g<2>", f"uygulama adı {APP_LABEL}")
     ok &= patch_signing(gradle)
+    ok &= patch_compile_sdk(android)
     return 0 if ok else 1
 
 
