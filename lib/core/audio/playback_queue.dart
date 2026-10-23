@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'track.dart';
 
-enum RepeatMode { off, all, one }
+enum PlaybackRepeat { off, all, one }
 
 /// Saf (arayüzden ve sesten bağımsız) oynatma kuyruğu mantığı.
 ///
@@ -16,12 +16,12 @@ class PlaybackQueue {
   List<int> _order = <int>[];
   int _position = -1;
   bool _shuffle = false;
-  RepeatMode _repeat = RepeatMode.off;
+  PlaybackRepeat _repeat = PlaybackRepeat.off;
 
   List<Track> get tracks => List<Track>.unmodifiable(_tracks);
   bool get isEmpty => _tracks.isEmpty;
   bool get shuffle => _shuffle;
-  RepeatMode get repeat => _repeat;
+  PlaybackRepeat get repeat => _repeat;
 
   Track? get current => (_position >= 0 && _position < _order.length)
       ? _tracks[_order[_position]]
@@ -34,7 +34,7 @@ class PlaybackQueue {
 
   bool get hasNext =>
       current != null &&
-      (_position < _order.length - 1 || _repeat == RepeatMode.all);
+      (_position < _order.length - 1 || _repeat == PlaybackRepeat.all);
 
   /// Kuyruğu değiştirir ve [startIndex] parçasını geçerli yapar.
   void setTracks(List<Track> tracks, {int startIndex = 0}) {
@@ -75,12 +75,12 @@ class PlaybackQueue {
 
   void cycleRepeat() {
     switch (_repeat) {
-      case RepeatMode.off:
-        _repeat = RepeatMode.all;
-      case RepeatMode.all:
-        _repeat = RepeatMode.one;
-      case RepeatMode.one:
-        _repeat = RepeatMode.off;
+      case PlaybackRepeat.off:
+        _repeat = PlaybackRepeat.all;
+      case PlaybackRepeat.all:
+        _repeat = PlaybackRepeat.one;
+      case PlaybackRepeat.one:
+        _repeat = PlaybackRepeat.off;
     }
   }
 
@@ -94,7 +94,7 @@ class PlaybackQueue {
       _position++;
       return current;
     }
-    if (_repeat == RepeatMode.all) {
+    if (_repeat == PlaybackRepeat.all) {
       if (_shuffle) {
         _rebuildOrder(_random.nextInt(_tracks.length));
       } else {
@@ -112,7 +112,7 @@ class PlaybackQueue {
     }
     if (_position > 0) {
       _position--;
-    } else if (_repeat == RepeatMode.all) {
+    } else if (_repeat == PlaybackRepeat.all) {
       _position = _order.length - 1;
     }
     return current;

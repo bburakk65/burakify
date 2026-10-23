@@ -32,7 +32,7 @@ void main() {
     final PlaybackQueue q = PlaybackQueue()
       ..setTracks(_tracks(3))
       ..cycleRepeat();
-    expect(q.repeat, RepeatMode.all);
+    expect(q.repeat, PlaybackRepeat.all);
     q.next();
     q.next();
     expect(q.next()!.title, 't0');
@@ -43,9 +43,9 @@ void main() {
     final PlaybackQueue q = PlaybackQueue();
     q.cycleRepeat();
     q.cycleRepeat();
-    expect(q.repeat, RepeatMode.one);
+    expect(q.repeat, PlaybackRepeat.one);
     q.cycleRepeat();
-    expect(q.repeat, RepeatMode.off);
+    expect(q.repeat, PlaybackRepeat.off);
   });
 
   test('karıştırma geçerli parçayı korur ve her parçayı bir kez içerir', () {

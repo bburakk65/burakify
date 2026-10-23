@@ -22,12 +22,12 @@ class TransportControls extends StatelessWidget {
       listenable: player,
       builder: (BuildContext context, Widget? _) {
         final bool hasTrack = player.queue.current != null;
-        final RepeatMode repeat = player.queue.repeat;
+        final PlaybackRepeat repeat = player.queue.repeat;
         final double iconSize = compact ? 22 : 26;
         final String repeatTip = switch (repeat) {
-          RepeatMode.off => 'Tekrar: kapalı',
-          RepeatMode.all => 'Tekrar: tüm kuyruk',
-          RepeatMode.one => 'Tekrar: tek şarkı',
+          PlaybackRepeat.off => 'Tekrar: kapalı',
+          PlaybackRepeat.all => 'Tekrar: tüm kuyruk',
+          PlaybackRepeat.one => 'Tekrar: tek şarkı',
         };
         return Row(
           mainAxisSize: MainAxisSize.min,
@@ -74,10 +74,10 @@ class TransportControls extends StatelessWidget {
               key: const Key('repeat_button'),
               tooltip: repeatTip,
               iconSize: iconSize,
-              color: repeat == RepeatMode.off ? null : scheme.primary,
+              color: repeat == PlaybackRepeat.off ? null : scheme.primary,
               onPressed: hasTrack ? player.cycleRepeat : null,
               icon: Icon(
-                repeat == RepeatMode.one ? Icons.repeat_one : Icons.repeat,
+                repeat == PlaybackRepeat.one ? Icons.repeat_one : Icons.repeat,
               ),
             ),
           ],

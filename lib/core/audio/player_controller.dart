@@ -219,7 +219,7 @@ class PlayerController extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    if (_queue.repeat == RepeatMode.one) {
+    if (_queue.repeat == PlaybackRepeat.one) {
       await _service.seek(Duration.zero);
       await _service.play();
       return;

@@ -1,6 +1,5 @@
 import 'package:burakify/core/data/settings_store.dart';
 import 'package:burakify/core/design/logo.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

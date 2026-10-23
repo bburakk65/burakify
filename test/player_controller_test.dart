@@ -89,7 +89,7 @@ void main() {
     await player.playTracks(_tracks(2));
     player.cycleRepeat();
     player.cycleRepeat();
-    expect(player.queue.repeat, RepeatMode.one);
+    expect(player.queue.repeat, PlaybackRepeat.one);
     service.complete();
     await _settle();
     await _settle();
