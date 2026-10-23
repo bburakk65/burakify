@@ -1,0 +1,111 @@
+name: CI
+
+# Her gönderimde: biçim + statik analiz + test. Testler geçerse sürüm (release) APK'sı ve
+# Windows derlemesi yapılır. Etiketli (v*) GitHub Release'i release-android.yml yapar.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Platform klasörlerini hazırla
+        shell: bash
+        run: bash tool/prepare_platforms.sh
+      - run: flutter --version
+      - run: flutter pub get
+      # Biçim denetimi geçici olarak bilgilendirme amaçlı: kod henüz hiç `dart format`
+      # ile biçimlendirilmedi. İlk biçimlendirmeden sonra `continue-on-error` kaldırılacak.
+      - name: Biçim denetimi
+        run: dart format --output=none --set-exit-if-changed lib test
+        continue-on-error: true
+      # Hata ve uyarılar işi başarısız yapar; yalnızca 'info' düzeyindeki öneriler yapmaz.
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test
+
+  build-android:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Platform klasörlerini hazırla
+        shell: bash
+        run: bash tool/prepare_platforms.sh
+      - run: flutter pub get
+      # İmza anahtarı GitHub Secrets'ta varsa APK onunla imzalanır (her sürümde aynı anahtar
+      # gerekir, yoksa telefonda güncelleme olarak kurulmaz). Secret yoksa (ör. fork/PR)
+      # derleme yine yapılır ama Flutter'ın geçici debug anahtarıyla imzalanır.
+      - name: İmza anahtarını hazırla
+        id: sign
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > android/app/upload.jks
+            {
+              echo "storePassword=$KS_PASS"
+              echo "keyPassword=$KEY_PASS"
+              echo "keyAlias=$KEY_ALIAS"
+              echo "storeFile=upload.jks"
+            } > android/key.properties
+            echo "signed=imzali" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::ANDROID_KEYSTORE_BASE64 tanımlı değil; APK geçici debug anahtarıyla imzalanacak"
+            echo "signed=gecici-anahtar" >> "$GITHUB_OUTPUT"
+          fi
+      - run: flutter build apk --release
+      - name: APK'yı adlandır (burakify-v<sürüm>+<derleme>.apk)
+        id: name
+        shell: bash
+        run: |
+          VER=$(grep -E '^version:' pubspec.yaml | head -1 | awk '{print $2}')
+          test -n "$VER" || { echo "pubspec.yaml'da version bulunamadı"; exit 1; }
+          mkdir out
+          cp build/app/outputs/flutter-apk/app-release.apk "out/burakify-v${VER}.apk"
+          (cd out && sha256sum "burakify-v${VER}.apk" > "burakify-v${VER}.apk.sha256")
+          echo "ver=$VER" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: burakify-v${{ steps.name.outputs.ver }}-${{ steps.sign.outputs.signed }}
+          path: out/*
+          retention-days: 30
+
+  build-windows:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Platform klasörlerini hazırla
+        shell: bash
+        run: bash tool/prepare_platforms.sh
+      - run: flutter pub get
+      - run: flutter build windows --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: burakify-windows
+          path: build/windows/x64/runner/Release
+          retention-days: 14
