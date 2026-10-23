@@ -1,0 +1,29 @@
+name: burakify
+description: Burakify — özgün müzik platformu (Android, tablet, Windows).
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+# Yalnızca kodda gerçekten kullanılan paketler. Sürümler bu ortamda
+# `flutter pub get` ile ÇÖZÜMLENEMEDİ (pub.dev erişimi yok); ilk çözümleme
+# GitHub Actions'ta olacak ve üretilen pubspec.lock depoya eklenmeli.
+# Sonraki aşamalarda gerektikçe eklenecekler: audio_service + audio_session
+# (arka plan/bildirim), package_info_plus + http + crypto (güncelleme).
+dependencies:
+  flutter:
+    sdk: flutter
+  just_audio: ^0.9.40          # ses oynatma (Android, Windows)
+  just_audio_windows: ">=0.2.0 <1.0.0"  # just_audio'nun Windows eklentisi (kodda import edilmez)
+  file_picker: ^8.0.0          # yerel müzik dosyası seçme
+  desktop_drop: ">=0.4.4 <1.0.0"  # Windows sürükle-bırak
+  shared_preferences: ^2.2.3   # ayarlar (tema)
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
