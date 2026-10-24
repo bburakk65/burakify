@@ -9,12 +9,15 @@ environment:
 # Yalnızca kodda gerçekten kullanılan paketler. Sürümler bu ortamda
 # `flutter pub get` ile ÇÖZÜMLENEMEDİ (pub.dev erişimi yok); ilk çözümleme
 # GitHub Actions'ta olacak ve üretilen pubspec.lock depoya eklenmeli.
-# Sonraki aşamalarda gerektikçe eklenecekler: audio_service + audio_session
-# (arka plan/bildirim), package_info_plus + http + crypto (güncelleme).
+# Sonraki aşamalarda gerektikçe eklenecekler: package_info_plus + crypto (güncelleme).
+# NOT: Sürüm aralıkları bilerek geniş tutuldu (pub.dev bu ortamdan görülemedi).
 dependencies:
   flutter:
     sdk: flutter
-  just_audio: ^0.9.40          # ses oynatma (Android, Windows)
+  just_audio: ">=0.9.40 <1.0.0"  # ses oynatma (Android, Windows)
+  just_audio_background: ">=0.0.1-beta.11 <0.1.0"  # Android arka plan çalma + bildirim
+  audio_service: ">=0.18.12 <0.19.0"  # MediaItem (bildirim bilgisi)
+  http: ">=1.2.0 <2.0.0"       # çevrimiçi katalog (Internet Archive)
   just_audio_windows: ">=0.2.0 <1.0.0"  # just_audio'nun Windows eklentisi (kodda import edilmez)
   file_picker: ^8.0.0          # yerel müzik dosyası seçme
   desktop_drop: ">=0.4.4 <1.0.0"  # Windows sürükle-bırak

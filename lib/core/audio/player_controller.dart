@@ -103,7 +103,7 @@ class PlayerController extends ChangeNotifier {
     position.value = Duration.zero;
     _notify();
     try {
-      await _service.load(track.path);
+      await _service.load(track.path, title: track.title, artist: track.artist);
       if (_disposed || token != _loadToken) {
         return;
       }
@@ -115,7 +115,9 @@ class PlayerController extends ChangeNotifier {
         return;
       }
       _loadedId = null;
-      _errorMessage = 'Dosya açılamadı: ${track.title}';
+      _errorMessage = track.isOnline
+          ? 'Çevrimiçi parça açılamadı (internet bağlantısını kontrol edin): ${track.title}'
+          : 'Dosya açılamadı: ${track.title}';
       try {
         await _service.pause();
       } catch (_) {

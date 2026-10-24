@@ -207,15 +207,16 @@ void main() {
       });
     });
 
-    testWidgets('Ayarlar henüz olmayan özellikleri açıkça belirtir',
+    testWidgets('Ayarlar katalog ve arka plan durumunu, olmayanı açıkça belirtir',
         (WidgetTester tester) async {
       setSize(tester, const Size(400, 800));
       await withPlatform(TargetPlatform.android, () async {
         await pumpApp(tester);
         await tester.tap(_inNav(NavigationBar, 'Ayarlar'));
         await tester.pumpAndSettle();
-        expect(find.text('Bağlı değil'), findsOneWidget);
-        expect(find.text('Sonraki aşamada eklenecek'), findsNWidgets(2));
+        expect(find.textContaining('Sahte katalog'), findsOneWidget);
+        expect(find.textContaining('ekran kapalıyken çalar'), findsOneWidget);
+        expect(find.text('Sonraki aşamada eklenecek'), findsOneWidget);
       });
     });
   });

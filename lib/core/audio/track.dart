@@ -1,16 +1,34 @@
-/// Oynatılabilir parça. Şu an yalnızca yerel dosyalardan oluşturulur.
+/// Oynatılabilir parça: yerel dosya ([path] dosya yolu) veya çevrimiçi
+/// kaynak ([path] http/https adresi).
 class Track {
-  const Track({required this.id, required this.path, required this.title});
+  const Track({
+    required this.id,
+    required this.path,
+    required this.title,
+    this.artist = '',
+  });
 
   final String id;
   final String path;
   final String title;
+
+  /// Boş olabilir (yerel dosyalarda etiket okunmuyor).
+  final String artist;
+
+  /// Parça internetten mi akıyor?
+  bool get isOnline => isOnlinePath(path);
 
   @override
   bool operator ==(Object other) => other is Track && other.id == id;
 
   @override
   int get hashCode => id.hashCode;
+}
+
+/// Yol bir http/https adresi mi?
+bool isOnlinePath(String path) {
+  final String p = path.toLowerCase();
+  return p.startsWith('https://') || p.startsWith('http://');
 }
 
 const List<String> kSupportedAudioExtensions = <String>[

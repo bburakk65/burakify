@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../../core/animation/fade_slide_in.dart';
 import '../../core/design/logo.dart';
 import '../../features/home/home_page.dart';
 import '../../features/library/library_page.dart';
@@ -49,7 +51,12 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
   bool _queuePanelOpen = true;
   bool _wideDesktop = true;
 
-  void _select(int i) => setState(() => _index = i);
+  void _select(int i) {
+    if (i != _index) {
+      HapticFeedback.selectionClick();
+    }
+    setState(() => _index = i);
+  }
 
   void _toggleQueue() {
     if (_wideDesktop) {
@@ -59,7 +66,15 @@ class _AdaptiveShellState extends State<AdaptiveShell> {
     }
   }
 
+  /// Sekme değişince yeni sayfa hafifçe solarak/kayarak belirir.
   Widget _page(FormFactor ff) {
+    return FadeSlideIn(
+      key: ValueKey<int>(_index),
+      child: _pageContent(ff),
+    );
+  }
+
+  Widget _pageContent(FormFactor ff) {
     switch (_index) {
       case 0:
         return HomePage(key: _homeKey, formFactor: ff);

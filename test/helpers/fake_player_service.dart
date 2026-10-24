@@ -12,6 +12,7 @@ class FakePlayerService implements PlayerService {
   final StreamController<void> _completed = StreamController<void>.broadcast();
 
   final List<String> loadedPaths = <String>[];
+  final List<String> loadedTitles = <String>[];
   final Set<String> failingPaths = <String>{};
   final List<Duration> seeks = <Duration>[];
   bool playing = false;
@@ -28,7 +29,9 @@ class FakePlayerService implements PlayerService {
   Stream<void> get completedStream => _completed.stream;
 
   @override
-  Future<void> load(String path) async {
+  Future<void> load(String path,
+      {String title = '', String artist = ''}) async {
+    loadedTitles.add(title);
     playing = false;
     _playing.add(false);
     if (failingPaths.contains(path)) {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../app/layout/form_factor.dart';
+import '../../core/animation/fade_slide_in.dart';
 import '../../core/audio/player_controller.dart';
 import '../../core/audio/track.dart';
 import '../../core/design/components.dart';
@@ -21,16 +23,29 @@ Widget buildTrackSliver({
       delegate: SliverChildBuilderDelegate(
         (BuildContext context, int i) {
           final Track t = tracks[i];
-          return ListTile(
-            selected: t == current,
-            leading: CoverPlaceholder(seed: t.id, size: 48),
-            title: Text(t.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-            trailing: IconButton(
-              tooltip: 'Sıraya ekle',
-              icon: const Icon(Icons.playlist_add),
-              onPressed: () => player.addToQueue(<Track>[t]),
+          return FadeSlideIn(
+            key: ValueKey<String>('fade_${t.id}'),
+            index: i,
+            child: ListTile(
+              selected: t == current,
+              leading: CoverPlaceholder(seed: t.id, size: 48),
+              title: Text(t.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: t.artist.isEmpty
+                  ? null
+                  : Text(t.artist, maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: IconButton(
+                tooltip: 'Sıraya ekle',
+                icon: const Icon(Icons.playlist_add),
+                onPressed: () {
+                  HapticFeedback.selectionClick();
+                  player.addToQueue(<Track>[t]);
+                },
+              ),
+              onTap: () {
+                HapticFeedback.selectionClick();
+                player.playTracks(tracks, startIndex: i);
+              },
             ),
-            onTap: () => player.playTracks(tracks, startIndex: i),
           );
         },
         childCount: tracks.length,
@@ -50,11 +65,21 @@ Widget buildTrackSliver({
       delegate: SliverChildBuilderDelegate(
         (BuildContext context, int i) {
           final Track t = tracks[i];
-          return _TrackCard(
-            track: t,
-            isCurrent: t == current,
-            onPlay: () => player.playTracks(tracks, startIndex: i),
-            onQueue: () => player.addToQueue(<Track>[t]),
+          return FadeSlideIn(
+            key: ValueKey<String>('fade_${t.id}'),
+            index: i,
+            child: _TrackCard(
+              track: t,
+              isCurrent: t == current,
+              onPlay: () {
+                HapticFeedback.selectionClick();
+                player.playTracks(tracks, startIndex: i);
+              },
+              onQueue: () {
+                HapticFeedback.selectionClick();
+                player.addToQueue(<Track>[t]);
+              },
+            ),
           );
         },
         childCount: tracks.length,
@@ -104,13 +129,25 @@ class _TrackCard extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(
-                track.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  color: isCurrent ? theme.colorScheme.primary : null,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    track.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: isCurrent ? theme.colorScheme.primary : null,
+                    ),
+                  ),
+                  if (track.artist.isNotEmpty)
+                    Text(
+                      track.artist,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                ],
               ),
             ),
           ],

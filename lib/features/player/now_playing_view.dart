@@ -49,12 +49,18 @@ class NowPlayingView extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: <Widget>[
-                        AnimatedSwitcher(
+                        // Çalarken kapak büyür, duraklayınca hafifçe küçülür.
+                        AnimatedScale(
+                          scale: player.isPlaying ? 1.0 : 0.92,
                           duration: switchDuration,
-                          child: CoverPlaceholder(
-                            key: ValueKey<String>('cover_${track.id}'),
-                            seed: track.id,
-                            size: cover,
+                          curve: BurakifyMotion.standard,
+                          child: AnimatedSwitcher(
+                            duration: switchDuration,
+                            child: CoverPlaceholder(
+                              key: ValueKey<String>('cover_${track.id}'),
+                              seed: track.id,
+                              size: cover,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -69,6 +75,19 @@ class NowPlayingView extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        if (track.artist.isNotEmpty) ...<Widget>[
+                          const SizedBox(height: 4),
+                          Text(
+                            track.artist,
+                            key: const Key('now_playing_artist'),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                         if (player.errorMessage != null) ...<Widget>[
                           const SizedBox(height: 8),
                           Text(

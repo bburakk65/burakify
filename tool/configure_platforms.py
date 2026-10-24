@@ -6,6 +6,8 @@
 - Uygulama adı "Burakify"
 - Eklentilerin compileSdk değeri en az 36 olur (flutter_plugin_android_lifecycle
   gibi bağımlılıklar bunu istiyor; eski eklentiler 34 ile derleniyor ve APK derlemesi kırılıyor)
+- Arka plan çalma (audio_service / just_audio_background): manifest izinleri, servis,
+  medya düğmesi alıcısı ve MainActivity'nin AudioServiceActivity'den türemesi
 - Release imzalama: android/key.properties varsa release derlemesi onunla imzalanır,
   yoksa Flutter şablonundaki gibi debug anahtarına düşer (yerel deneme için).
 
@@ -163,6 +165,83 @@ def patch_compile_sdk(android: pathlib.Path) -> bool:
     return True
 
 
+AUDIO_PERMISSIONS = (
+    "android.permission.INTERNET",
+    "android.permission.WAKE_LOCK",
+    "android.permission.FOREGROUND_SERVICE",
+    "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+)
+
+AUDIO_COMPONENTS = """        <service android:name="com.ryanheise.audioservice.AudioService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="true" tools:ignore="Instantiatable">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+        <receiver android:name="com.ryanheise.audioservice.MediaButtonReceiver"
+            android:exported="true" tools:ignore="Instantiatable">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+"""
+
+
+def patch_audio_manifest(manifest: pathlib.Path) -> bool:
+    text = manifest.read_text(encoding="utf-8")
+    rel = manifest.relative_to(ROOT)
+    if "com.ryanheise.audioservice.AudioService" in text:
+        print(f"tamam: arka plan çalma manifest ayarı zaten ekli -> {rel}")
+        return True
+    if not re.search(r"<manifest\b[^>]*>", text) or "</application>" not in text:
+        print(f"HATA: {rel} içinde <manifest ...> veya </application> bulunamadı")
+        return False
+    if "xmlns:tools=" not in text:
+        text = re.sub(
+            r"<manifest\b",
+            '<manifest xmlns:tools="http://schemas.android.com/tools"',
+            text,
+            count=1,
+        )
+    perms = "".join(
+        f'    <uses-permission android:name="{p}" />\n'
+        for p in AUDIO_PERMISSIONS
+        if f'android:name="{p}"' not in text
+    )
+    # İzinler <application> etiketinden önce gelir.
+    text = re.sub(r"^(\s*)<application\b", lambda m: perms + m.group(0), text, count=1, flags=re.M)
+    text = text.replace("</application>", AUDIO_COMPONENTS + "    </application>", 1)
+    manifest.write_text(text, encoding="utf-8")
+    print(f"tamam: arka plan çalma izinleri, servis ve alıcı -> {rel}")
+    return True
+
+
+def patch_main_activity(android: pathlib.Path) -> bool:
+    src = android / "app" / "src" / "main"
+    candidates = [p for p in list(src.rglob("MainActivity.kt")) + list(src.rglob("MainActivity.java"))]
+    if not candidates:
+        print("HATA: android/app/src/main altında MainActivity bulunamadı")
+        return False
+    activity = candidates[0]
+    text = activity.read_text(encoding="utf-8")
+    rel = activity.relative_to(ROOT)
+    if "AudioServiceActivity" in text:
+        print(f"tamam: MainActivity zaten AudioServiceActivity -> {rel}")
+        return True
+    if "FlutterActivity" not in text:
+        print(f"HATA: {rel} içinde FlutterActivity bulunamadı")
+        return False
+    text = text.replace(
+        "io.flutter.embedding.android.FlutterActivity",
+        "com.ryanheise.audioservice.AudioServiceActivity",
+    )
+    text = text.replace("FlutterActivity", "AudioServiceActivity")
+    activity.write_text(text, encoding="utf-8")
+    print(f"tamam: MainActivity AudioServiceActivity'den türüyor -> {rel}")
+    return True
+
+
 def main() -> int:
     android = ROOT / "android"
     if not android.is_dir():
@@ -185,6 +264,8 @@ def main() -> int:
     ok &= patch(manifest, r'(android:label=")[^"]*(")', rf"\g<1>{APP_LABEL}\g<2>", f"uygulama adı {APP_LABEL}")
     ok &= patch_signing(gradle)
     ok &= patch_compile_sdk(android)
+    ok &= patch_audio_manifest(manifest)
+    ok &= patch_main_activity(android)
     return 0 if ok else 1
 
 

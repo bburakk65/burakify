@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/audio/player_controller.dart';
+import '../core/catalog/catalog_source.dart';
 import '../core/data/library_controller.dart';
 import '../core/data/settings_controller.dart';
 
@@ -11,12 +12,14 @@ class AppServices {
     required this.library,
     required this.settings,
     required this.pickFiles,
+    required this.catalog,
   });
 
   final PlayerController player;
   final LibraryController library;
   final SettingsController settings;
   final Future<List<String>> Function() pickFiles;
+  final CatalogSource catalog;
 
   /// [settings] burada kapatılmaz; sahibi [AppBootstrap]'tır.
   void dispose() {

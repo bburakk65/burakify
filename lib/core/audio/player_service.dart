@@ -8,8 +8,9 @@ abstract class PlayerService {
   /// Parça sonuna gelindiğinde olay üretir.
   Stream<void> get completedStream;
 
-  /// Dosyayı yükler. Bulunamazsa/desteklenmiyorsa istisna fırlatır.
-  Future<void> load(String path);
+  /// Dosyayı veya http/https adresini yükler. Bulunamazsa/desteklenmiyorsa
+  /// istisna fırlatır. [title] ve [artist] bildirimde/kilit ekranında görünür.
+  Future<void> load(String path, {String title = '', String artist = ''});
 
   /// Çalmayı başlatır; çalma bitene kadar beklemez.
   Future<void> play();

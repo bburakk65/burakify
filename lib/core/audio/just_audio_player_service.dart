@@ -1,15 +1,18 @@
 import 'dart:async';
 
+import 'package:audio_service/audio_service.dart' show MediaItem;
 import 'package:just_audio/just_audio.dart';
 
 import 'player_service.dart';
+import 'track.dart';
 
-/// `just_audio` tabanlı gerçek ses oynatma.
+/// `just_audio` tabanlı gerçek ses oynatma (yerel dosya ve internet akışı).
 ///
-/// KAPSAM: Yalnızca uygulama açıkken çalma. Arka plan servisi, bildirim ve
-/// kilit ekranı kontrolleri (`audio_service`) bu dosyada YOK; ayrı aşamada
-/// eklenecek (bkz. docs/10-PLAYBACK-ANDROID-REQUIREMENTS.md).
-/// NOT: Bu dosya bu ortamda derlenmedi/test edilmedi (Flutter SDK yok).
+/// Android'de [initBackgroundAudio] (background_audio.dart) çağrılmışsa
+/// `just_audio_background` devreye girer: ekran kapalıyken çalma, bildirim ve
+/// kilit ekranı kontrolleri. Her parçaya [MediaItem] etiketi bu yüzden verilir;
+/// Windows'ta etiket yok sayılır.
+/// NOT: Bu dosya bu ortamda derlenmedi (Flutter SDK yok); doğrulama CI ve cihazdadır.
 class JustAudioPlayerService implements PlayerService {
   JustAudioPlayerService() : _player = AudioPlayer();
 
@@ -30,10 +33,23 @@ class JustAudioPlayerService implements PlayerService {
       .map((ProcessingState _) {});
 
   @override
-  Future<void> load(String path) async {
+  Future<void> load(
+    String path, {
+    String title = '',
+    String artist = '',
+  }) async {
     // Önceki parçayı durdur; yükleme başarısız olursa eski ses çalmaya devam etmesin.
     await _player.stop();
-    await _player.setFilePath(path);
+    final MediaItem item = MediaItem(
+      id: path,
+      title: title.isEmpty ? titleFromPath(path) : title,
+      artist: artist.isEmpty ? null : artist,
+    );
+    if (isOnlinePath(path)) {
+      await _player.setUrl(path, tag: item);
+    } else {
+      await _player.setFilePath(path, tag: item);
+    }
   }
 
   @override

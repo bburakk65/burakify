@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../core/audio/just_audio_player_service.dart';
 import '../core/audio/player_controller.dart';
 import '../core/audio/player_service.dart';
+import '../core/catalog/catalog_source.dart';
+import '../core/catalog/internet_archive_catalog.dart';
 import '../core/data/audio_file_picker.dart';
 import '../core/data/library_controller.dart';
 import '../core/data/settings_controller.dart';
@@ -17,11 +19,13 @@ class BurakifyApp extends StatefulWidget {
     required this.settings,
     this.playerService,
     this.pickFiles,
+    this.catalog,
   });
 
   final SettingsController settings;
   final PlayerService? playerService;
   final Future<List<String>> Function()? pickFiles;
+  final CatalogSource? catalog;
 
   @override
   State<BurakifyApp> createState() => _BurakifyAppState();
@@ -38,6 +42,7 @@ class _BurakifyAppState extends State<BurakifyApp> {
       library: LibraryController(),
       settings: widget.settings,
       pickFiles: widget.pickFiles ?? pickAudioPaths,
+      catalog: widget.catalog ?? InternetArchiveCatalog(),
     );
   }
 

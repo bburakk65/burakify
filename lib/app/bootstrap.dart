@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/audio/player_service.dart';
+import '../core/catalog/catalog_source.dart';
 import '../core/data/settings_controller.dart';
 import '../core/data/settings_store.dart';
 import '../core/design/burakify_theme.dart';
@@ -16,12 +17,14 @@ class AppBootstrap extends StatefulWidget {
     required this.openStore,
     this.playerService,
     this.pickFiles,
+    this.catalog,
     this.timeout = const Duration(seconds: 8),
   });
 
   final Future<SettingsStore> Function() openStore;
   final PlayerService? playerService;
   final Future<List<String>> Function()? pickFiles;
+  final CatalogSource? catalog;
   final Duration timeout;
 
   @override
@@ -95,6 +98,7 @@ class _AppBootstrapState extends State<AppBootstrap> {
           settings: settings,
           playerService: widget.playerService,
           pickFiles: widget.pickFiles,
+          catalog: widget.catalog,
         );
       },
     );

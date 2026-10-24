@@ -80,15 +80,17 @@ class SettingsPage extends StatelessWidget {
                 const SizedBox(height: 32),
                 Text('Durum', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 8),
-                const _StatusRow(
-                  icon: Icons.cloud_off_outlined,
+                _StatusRow(
+                  icon: Icons.cloud_outlined,
                   title: 'Çevrimiçi müzik kataloğu',
-                  value: 'Bağlı değil',
+                  value:
+                      '${AppScope.of(context).catalog.name} (Creative Commons / kamu malı)',
                 ),
                 const _StatusRow(
-                  icon: Icons.notifications_none,
+                  icon: Icons.notifications_active_outlined,
                   title: 'Arka planda çalma ve bildirim denetimleri',
-                  value: 'Sonraki aşamada eklenecek',
+                  value:
+                      'Android: açık (ekran kapalıyken çalar). Windows: yalnızca uygulama açıkken.',
                 ),
                 const _StatusRow(
                   icon: Icons.system_update_alt,

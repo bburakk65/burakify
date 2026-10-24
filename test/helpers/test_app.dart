@@ -1,4 +1,6 @@
 import 'package:burakify/app/bootstrap.dart';
+import 'package:burakify/core/audio/track.dart';
+import 'package:burakify/core/catalog/catalog_source.dart';
 import 'package:burakify/core/data/settings_store.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -39,6 +41,7 @@ Future<PumpedApp> pumpApp(
   WidgetTester tester, {
   List<String> picked = const <String>[],
   MemorySettingsStore? store,
+  CatalogSource? catalog,
 }) async {
   final FakePlayerService player = FakePlayerService();
   final MemorySettingsStore settings = store ?? MemorySettingsStore();
@@ -47,6 +50,7 @@ Future<PumpedApp> pumpApp(
       openStore: () async => settings,
       playerService: player,
       pickFiles: () async => picked,
+      catalog: catalog ?? FakeCatalog(),
     ),
   );
   await tester.pumpAndSettle();
@@ -63,4 +67,28 @@ Future<void> pressSystemBack(WidgetTester tester) async {
     (ByteData? _) {},
   );
   await tester.pumpAndSettle();
+}
+
+/// Testler için sahte katalog: ağa çıkmaz.
+class FakeCatalog implements CatalogSource {
+  FakeCatalog({this.results = const <Track>[], this.error});
+
+  final List<Track> results;
+  final CatalogException? error;
+  final List<String> queries = <String>[];
+
+  @override
+  String get name => 'Sahte katalog';
+
+  @override
+  String get description => 'Test için';
+
+  @override
+  Future<List<Track>> search(String query) async {
+    queries.add(query);
+    if (error != null) {
+      throw error!;
+    }
+    return results;
+  }
 }
