@@ -16,6 +16,9 @@ Finder _inNav(Type container, String label) =>
     find.descendant(of: find.byType(container), matching: find.text(label));
 
 Future<void> _addFilesFromHome(WidgetTester tester) async {
+  // Ana Sayfa üstü kalabalık; düğme ekran dışında kalabilir, kaydırıp göster.
+  await tester.ensureVisible(find.byKey(const Key('home_add_button')));
+  await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('home_add_button')));
   await tester.pumpAndSettle();
 }

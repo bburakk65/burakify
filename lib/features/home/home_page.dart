@@ -187,7 +187,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     Semantics(
                       header: true,
                       child: Text('Ana Sayfa', style: theme.textTheme.headlineMedium),
@@ -248,7 +248,7 @@ class _HomePageState extends State<HomePage> {
                           ? '${services.catalog.name}: ${services.catalog.description}'
                           : 'Çevrimiçi müzik için yukarıdan "Çevrimiçi"yi seçin. Kitaplığınızdaki dosyalar internetsiz çalınır.',
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     Text(
                       _online ? 'Çevrimiçi sonuçlar' : 'Yerel müzik',
                       style: theme.textTheme.titleMedium,
